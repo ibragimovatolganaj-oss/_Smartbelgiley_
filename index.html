@@ -26,7 +26,7 @@
                 </div>
                 <div class="flex-1 sm:flex-none">
                     <div class="flex items-center space-x-2">
-                        <input type="text" id="schoolNameInput" value="№1 Орта мектеп" onchange="saveSchoolName()" class="bg-indigo-700/80 text-white font-bold text-lg px-2.5 py-1 rounded-lg border border-indigo-400/50 outline-none focus:ring-2 focus:ring-white w-full sm:w-64" title="Мектеп атауын өзгерту үшін өңдеңіз">
+                        <input type="text" id="schoolNameInput" value="" placeholder="Мектеп атауын енгізіңіз" onchange="saveSchoolName()" class="bg-indigo-700/80 text-white font-bold text-lg px-2.5 py-1 rounded-lg border border-indigo-400/50 outline-none focus:ring-2 focus:ring-white w-full sm:w-64" title="Мектеп атауын өзгерту үшін өңдеңіз">
                         <button onclick="saveSchoolName()" class="bg-indigo-500 hover:bg-indigo-400 text-white p-2 rounded-lg text-xs font-semibold transition" title="Мектеп атауын сақтау">
                             <i class="fa-solid fa-check"></i>
                         </button>
@@ -161,7 +161,7 @@
                 </div>
                 <div class="flex items-center space-x-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
                     <label class="text-xs font-semibold text-slate-600">Мектептегі барлық оқушылар саны:</label>
-                    <input type="number" id="totalSchoolStudentsInput" value="450" class="w-20 bg-white border border-slate-300 rounded-lg px-2 py-1 text-sm font-bold text-indigo-600 text-center outline-none focus:ring-2 focus:ring-indigo-500" onchange="saveTotalSchoolStudents()">
+                    <input type="number" id="totalSchoolStudentsInput" value="" placeholder="Сан" class="w-20 bg-white border border-slate-300 rounded-lg px-2 py-1 text-sm font-bold text-indigo-600 text-center outline-none focus:ring-2 focus:ring-indigo-500" onchange="saveTotalSchoolStudents()">
                     <button onclick="saveTotalSchoolStudents()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg text-xs font-semibold transition" title="Сақтау">
                         <i class="fa-solid fa-check"></i>
                     </button>
@@ -208,12 +208,8 @@
                                 <i class="fa-solid fa-circle-xmark text-rose-600"></i> Журнал толтырмағандар
                             </h4>
                         </div>
-                        <div class="p-4 bg-white rounded-xl border border-rose-100 text-center space-y-2">
-                            <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
-                                <i class="fa-solid fa-triangle-exclamation"></i>
-                            </div>
-                            <h5 id="unfilledSummaryText" class="text-sm font-bold text-slate-800">Бүгінгі күн бойынша статистика</h5>
-                            <p class="text-xs text-slate-500">Журнал толтыру барысын бақылау панелі.</p>
+                        <div id="unfilledTeachersGrid" class="grid grid-cols-1 gap-2.5 max-h-64 overflow-y-auto pr-1">
+                            <!-- Dynamic unfilled cards -->
                         </div>
                     </div>
                 </div>
@@ -575,12 +571,12 @@
 
         window.onload = function() {
             const savedSchool = localStorage.getItem("smart_belgiley_school_name");
-            if (savedSchool) {
+            if (savedSchool !== null) {
                 document.getElementById("schoolNameInput").value = savedSchool;
             }
 
             const savedTotal = localStorage.getItem("smart_belgiley_total_students");
-            if (savedTotal) {
+            if (savedTotal !== null) {
                 document.getElementById("totalSchoolStudentsInput").value = savedTotal;
             }
 
@@ -758,7 +754,7 @@
             populateTeacherSelect();
             closeDeleteTeacherModal();
             renderTeachersStatusWidget();
-            showToast("Тізімнен сәтті өшірілді!");
+            showToast("Тізімнен сәтті өшіриді!");
         }
 
         function openAddStudentModal() {
@@ -952,12 +948,14 @@
 
         function renderTeachersStatusWidget() {
             const filledGrid = document.getElementById("filledTeachersGrid");
+            const unfilledGrid = document.getElementById("unfilledTeachersGrid");
             const filledCountTag = document.getElementById("filledCountTag");
             const filledBar = document.getElementById("teacherProgressFilled");
             const unfilledBar = document.getElementById("teacherProgressUnfilled");
 
-            if (!filledGrid) return;
+            if (!filledGrid || !unfilledGrid) return;
             filledGrid.innerHTML = "";
+            unfilledGrid.innerHTML = "";
 
             const filledList = schoolTeachers.filter(t => t.filled);
             const unfilledList = schoolTeachers.filter(t => !t.filled);
@@ -979,6 +977,17 @@
                     div.className = "flex items-center justify-between bg-white p-2.5 rounded-xl border border-emerald-100 shadow-sm text-xs font-semibold text-slate-700";
                     div.innerHTML = `<span>${t.name}</span><span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">Толтырды</span>`;
                     filledGrid.appendChild(div);
+                });
+            }
+
+            if (unfilledList.length === 0) {
+                unfilledGrid.innerHTML = `<p class="text-xs text-emerald-600 p-2 font-semibold">Барлық мұғалім журналды толтырды!</p>`;
+            } else {
+                unfilledList.forEach(t => {
+                    const div = document.createElement("div");
+                    div.className = "flex items-center justify-between bg-white p-2.5 rounded-xl border border-rose-100 shadow-sm text-xs font-semibold text-slate-700";
+                    div.innerHTML = `<span>${t.name}</span><span class="text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg">Толтырмады</span>`;
+                    unfilledGrid.appendChild(div);
                 });
             }
         }
