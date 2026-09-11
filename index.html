@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart_belgiley - Сабаққа Қатысуды Бақылау Платформасы</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontInter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Mammoth.js for reading .docx files directly -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3 w-full sm:w-auto">
+                <div class="bg-white text-indigo-600 p-2 rounded-xl font-bold shadow shrink-0">
+                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                </div>
+                <div class="flex-1 sm:flex-none">
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="schoolNameInput" value="№1 Орта мектеп" onchange="saveSchoolName()" class="bg-indigo-700/80 text-white font-bold text-lg px-2.5 py-1 rounded-lg border border-indigo-400/50 outline-none focus:ring-2 focus:ring-white w-full sm:w-64" title="Мектеп атауын өзгерту үшін өңдеңіз">
+                        <button onclick="saveSchoolName()" class="bg-indigo-500 hover:bg-indigo-400 text-white p-2 rounded-lg text-xs font-semibold transition" title="Мектеп атауын сақтау">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-indigo-200 mt-0.5">Smart_belgiley • Сабаққа қатысуды бақылау жүйесі</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 bg-indigo-700/60 p-1 rounded-xl">
+                <button onclick="switchRole('teacher')" id="roleTeacherBtn" class="px-3 py-1.5 rounded-lg bg-white text-indigo-700 shadow-sm transition font-medium text-sm">Мұғалім</button>
+                <button onclick="switchRole('admin')" id="roleAdminBtn" class="px-3 py-1.5 rounded-lg text-indigo-200 hover:text-white transition font-medium text-sm">Әкімші</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 gap-6">
+
+        <!-- Teacher View -->
+        <div id="teacherView" class="space-y-6">
+            <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">Күнделікті сабақ журналы</h2>
+                    <p class="text-sm text-slate-500">Сынып пен литерді таңдап, оқушылардың қатысуын белгілеңіз. Барлық деректер тұрақты сақталады.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="text-xs font-semibold text-slate-500">Пән иесі:</label>
+                            <div class="flex items-center gap-2">
+                                <button onclick="openAddTeacherModal()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1" title="Жаңа қосу">
+                                    <i class="fa-solid fa-user-plus"></i> Қосу
+                                </button>
+                                <button onclick="openDeleteTeacherModal()" class="text-xs text-rose-600 hover:text-rose-800 font-bold flex items-center gap-1" title="Тізімнен өшіру">
+                                    <i class="fa-solid fa-user-minus"></i> Өшіру
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <select id="teacherNameSelect" onchange="onTeacherSelectChange()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500 w-56">
+                                <!-- Dynamically populated teachers list -->
+                            </select>
+                            <button onclick="saveTeacherInfo()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl text-sm font-semibold transition shadow-sm" title="Атын сақтау">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Сынып:</label>
+                        <select id="teacherGradeSelect" onchange="renderAttendanceTable()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500">
+                            <!-- Grades 1-11 -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Литер:</label>
+                        <select id="teacherLetterSelect" onchange="renderAttendanceTable()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500">
+                            <!-- Letters -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Күн:</label>
+                        <input type="date" id="attendanceDate" onchange="renderAttendanceTable()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-3">
+                    <h3 class="font-bold text-slate-800">Оқушылар тізімі</h3>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="openImportModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-sm font-semibold transition shadow-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-file-word"></i>
+                            <span>Word-тан жүктеу</span>
+                        </button>
+                        <button onclick="openAddStudentModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-sm font-semibold transition shadow-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span>Оқушы қосу</span>
+                        </button>
+                        <button onclick="saveAttendance()" class="bg-slate-800 hover:bg-slate-900 text-white px-3.5 py-2 rounded-xl text-sm font-semibold transition shadow-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>Сақтау</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold border-b border-slate-100">
+                                <th class="p-4">№</th>
+                                <th class="p-4">Оқушы аты-жөні</th>
+                                <th class="p-4 text-center text-emerald-600">Келді</th>
+                                <th class="p-4 text-center text-amber-600">Себепті</th>
+                                <th class="p-4 text-center text-rose-600">Себепсіз</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceTableBody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Rows dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Bottom Stats Overview -->
+                <div class="p-4 md:p-6 bg-slate-50/50 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center space-x-4">
+                        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl text-lg font-bold"><i class="fa-solid fa-user-check"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-medium">Келді</p>
+                            <h3 id="statPresent" class="text-xl font-bold text-slate-800">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center space-x-4">
+                        <div class="p-3 bg-amber-50 text-amber-600 rounded-xl text-lg font-bold"><i class="fa-solid fa-file-invoice"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-medium">Себепті</p>
+                            <h3 id="statExcused" class="text-xl font-bold text-slate-800">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center space-x-4">
+                        <div class="p-3 bg-rose-50 text-rose-600 rounded-xl text-lg font-bold"><i class="fa-solid fa-user-xmark"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-medium">Себепсіз</p>
+                            <h3 id="statAbsent" class="text-xl font-bold text-slate-800">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="adminView" class="space-y-6 hidden">
+            <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">Әкімшілік басқару</h2>
+                    <p class="text-sm text-slate-500">Мектеп бойынша жалпы статистика, мерзімдік есептер және журналды толтыру барысы</p>
+                </div>
+                <div class="flex items-center space-x-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                    <label class="text-xs font-semibold text-slate-600">Мектептегі барлық оқушылар саны:</label>
+                    <input type="number" id="totalSchoolStudentsInput" value="450" class="w-20 bg-white border border-slate-300 rounded-lg px-2 py-1 text-sm font-bold text-indigo-600 text-center outline-none focus:ring-2 focus:ring-indigo-500" onchange="saveTotalSchoolStudents()">
+                    <button onclick="saveTotalSchoolStudents()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg text-xs font-semibold transition" title="Сақтау">
+                        <i class="fa-solid fa-check"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Teacher Journal Completion Graphical Status -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-indigo-600"></i> Журналды толтыру барысы
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Журнал толтырған және толтырмағандардың жалпы көрсеткіші</p>
+                    </div>
+                    <div class="flex items-center space-x-3 text-xs font-semibold">
+                        <span class="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Толтырғандар</span>
+                        <span class="flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-700 rounded-lg border border-rose-200"><span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span> Толтырмағандар</span>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden flex shadow-inner">
+                    <div id="teacherProgressFilled" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%" title="Толтырғандар"></div>
+                    <div id="teacherProgressUnfilled" class="bg-rose-500 h-full transition-all duration-500" style="width: 0%" title="Толтырмағандар"></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                    <div class="bg-emerald-50/40 border border-emerald-200 p-4 rounded-2xl space-y-3">
+                        <div class="flex items-center justify-between border-b border-emerald-200 pb-2">
+                            <h4 class="font-bold text-emerald-800 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-circle-check text-emerald-600"></i> Журнал толтырғандар
+                            </h4>
+                            <span id="filledCountTag" class="text-xs bg-emerald-200 text-emerald-900 font-extrabold px-2.5 py-0.5 rounded-full">0</span>
+                        </div>
+                        <div id="filledTeachersGrid" class="grid grid-cols-1 gap-2.5 max-h-64 overflow-y-auto pr-1">
+                            <!-- Dynamic filled cards -->
+                        </div>
+                    </div>
+
+                    <div class="bg-rose-50/40 border border-rose-200 p-4 rounded-2xl space-y-3">
+                        <div class="flex items-center justify-between border-b border-rose-200 pb-2">
+                            <h4 class="font-bold text-rose-800 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-circle-xmark text-rose-600"></i> Журнал толтырмағандар
+                            </h4>
+                        </div>
+                        <div class="p-4 bg-white rounded-xl border border-rose-100 text-center space-y-2">
+                            <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            </div>
+                            <h5 id="unfilledSummaryText" class="text-sm font-bold text-slate-800">Бүгінгі күн бойынша статистика</h5>
+                            <p class="text-xs text-slate-500">Журнал толтыру барысын бақылау панелі.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Жалпы қатысу көрсеткіші</p>
+                        <h3 id="adminOverallRate" class="text-3xl font-extrabold text-slate-800 mt-2">—</h3>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-100 text-xs text-emerald-600 font-semibold flex items-center">
+                        <i class="fa-solid fa-arrow-trend-up mr-1"></i> Мектеп журналы бойынша
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Сабаққа келген оқушылар</p>
+                        <h3 id="adminTotalPresentToday" class="text-3xl font-extrabold text-emerald-600 mt-2">0</h3>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500">
+                        Толтырылған деректер негізінде
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Келмеген оқушылар</p>
+                        <h3 id="adminTotalAbsentToday" class="text-3xl font-extrabold text-rose-600 mt-2">0</h3>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500">
+                        Себепті және себепсіз келмегендер
+                    </div>
+                </div>
+            </div>
+
+            <!-- Period Reports -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg">Мерзімдік нәтижелер мен есептер</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Апталық, айлық және жылдық қатысу көрсеткіштері</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="flex items-center space-x-2 bg-slate-100 p-1 rounded-xl">
+                            <button onclick="switchPeriod('weekly')" id="periodWeeklyBtn" class="px-3 py-1.5 rounded-lg bg-white text-slate-800 font-semibold text-xs shadow-sm transition">Апталық</button>
+                            <button onclick="switchPeriod('monthly')" id="periodMonthlyBtn" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-800 font-semibold text-xs transition">Айлық</button>
+                            <button onclick="switchPeriod('yearly')" id="periodYearlyBtn" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-800 font-semibold text-xs transition">Жылдық</button>
+                        </div>
+                        <div class="flex items-center space-x-1.5">
+                            <button onclick="exportPeriodReport('word')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-1 shadow-sm">
+                                <i class="fa-solid fa-file-word"></i>
+                                <span>Word</span>
+                            </button>
+                            <button onclick="exportPeriodReport('excel')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-1 shadow-sm">
+                                <i class="fa-solid fa-file-excel"></i>
+                                <span>Excel</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="periodSummary" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+
+                <div class="overflow-x-auto mt-4">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-indigo-50/50 text-indigo-900 text-xs uppercase font-semibold border-b border-indigo-100">
+                                <th class="p-3.5">Оқушы аты-жөні</th>
+                                <th class="p-3.5">Сыныбы</th>
+                                <th class="p-3.5">Пән иесі</th>
+                                <th class="p-3.5">Қалған күндері (Күн-Ай-Жыл)</th>
+                                <th class="p-3.5 text-center">Қалған реті</th>
+                            </tr>
+                        </thead>
+                        <tbody id="periodTableBody" class="divide-y divide-slate-100 text-sm font-bold text-slate-900"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Monthly Absentee Report -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden p-6 space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Сабақты көп қалдырған оқушылар есебі
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Базада сақталған күнделікті деректер негізінде (Күн-Ай-Жыл форматында)</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="exportReport('word')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 shadow-sm">
+                            <i class="fa-solid fa-file-word"></i>
+                            <span>Word жүктеу</span>
+                        </button>
+                        <button onclick="exportReport('excel')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 shadow-sm">
+                            <i class="fa-solid fa-file-excel"></i>
+                            <span>Excel жүктеу</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-amber-50/50 text-amber-800 text-xs uppercase font-semibold border-b border-amber-100">
+                                <th class="p-3.5">Оқушы аты-жөні</th>
+                                <th class="p-3.5">Сыныбы</th>
+                                <th class="p-3.5">Пән иесі</th>
+                                <th class="p-3.5">Қалған күндері (Күн-Ай-Жыл)</th>
+                                <th class="p-3.5 text-center">Барлығы</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthlyAbsentTableBody" class="divide-y divide-slate-100 text-sm font-bold text-slate-900"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Add Student Modal -->
+    <div id="studentModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-800">Жаңа оқушы қосу</h3>
+                <button onclick="closeAddStudentModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Оқушының аты-жөні:</label>
+                    <input type="text" id="newStudentName" placeholder="Мысалы: Әлижан Серікұлы" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Сынып:</label>
+                        <select id="newStudentGrade" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Литер:</label>
+                        <select id="newStudentLetter" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"></select>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeAddStudentModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition">Болдырмау</button>
+                <button onclick="addNewStudent()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition">Қосу</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Teacher Modal -->
+    <div id="teacherModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-chalkboard-user text-indigo-600"></i> Жаңа пән иесін қосу
+                </h3>
+                <button onclick="closeAddTeacherModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Аты-жөні:</label>
+                    <input type="text" id="newTeacherNameInput" placeholder="Мысалы: Сүлейменова М.К." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeAddTeacherModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition">Болдырмау</button>
+                <button onclick="addNewTeacher()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition">Қосу</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Teacher Modal -->
+    <div id="deleteTeacherModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg text-rose-700 flex items-center gap-2">
+                    <i class="fa-solid fa-user-minus"></i> Тізімнен өшіру
+                </h3>
+                <button onclick="closeDeleteTeacherModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Өшірілетін адамды таңдаңыз:</label>
+                    <select id="teacherDeleteSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <p class="text-xs text-rose-500 font-medium">Ескерту: Бұл әрекетті тізімнен біржола алып тастайды.</p>
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeDeleteTeacherModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition">Болдырмау</button>
+                <button onclick="confirmDeleteTeacher()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold transition">Өшіру</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Word Import Modal -->
+    <div id="importModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-file-word text-indigo-600"></i> Word-тан тізім жүктеу
+                </h3>
+                <button onclick="closeImportModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Қай сыныпқа:</label>
+                        <select id="importGrade" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Литер:</label>
+                        <select id="importLetter" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"></select>
+                    </div>
+                </div>
+
+                <!-- DIRECT FILE UPLOAD ZONE -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">1. Word файлын тікелей жүктеу (.docx):</label>
+                    <label for="wordFileInput" class="border-2 border-dashed border-indigo-200 bg-indigo-50/40 hover:bg-indigo-50 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition text-center group">
+                        <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-file-arrow-up"></i>
+                        </div>
+                        <span id="selectedFileName" class="text-sm font-bold text-indigo-900">Word файлын таңдаңыз немесе осында сүйреңіз</span>
+                        <span class="text-xs text-slate-400 mt-1">(.docx форматы автоматты түрде оқылады)</span>
+                        <input type="file" id="wordFileInput" accept=".docx" class="hidden" onchange="handleWordFileUpload(event)">
+                    </label>
+                </div>
+
+                <div class="relative flex py-1 items-center">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink mx-4 text-xs text-slate-400 uppercase font-semibold">Немесе қолмен көшіріп қою</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">2. Мәтінді осында көшіріп қойыңыз (Әр жолға бір оқушы):</label>
+                    <textarea id="importText" rows="4" placeholder="Мысалы:&#10;Әділбек Нұрланұлы&#10;Айгерім Маратқызы" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeImportModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition">Болдырмау</button>
+                <button onclick="processWordImport()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition">Тізімді қосу</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 text-sm font-medium flex items-center space-x-2">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMessage">Сәтті орындалды!</span>
+    </div>
+
+    <script>
+        let students = JSON.parse(localStorage.getItem("smart_belgiley_students")) || [];
+        let attendanceHistory = JSON.parse(localStorage.getItem("smart_belgiley_history")) || {};
+        let schoolTeachers = JSON.parse(localStorage.getItem("smart_belgiley_teachers")) || [
+            { name: "Айтикеева Раушан Алимбаевна", filled: false },
+            { name: "Уримбаева Асем Каримовна", filled: false },
+            { name: "Жуманазарова Карима Жолбарысовна", filled: false },
+            { name: "Ерназарова Айткүл Кутлимуратқызы", filled: false },
+            { name: "Мырқасым Әйгерім Шәріпханқызы", filled: false },
+            { name: "Исакова Гулсима Орынбасаровна", filled: false },
+            { name: "Сапарбаева Балжан Турарбекқызы", filled: false },
+            { name: "Сейдахметова Улсерик Махсутовна", filled: false },
+            { name: "Шукурлаева Илья Алимжановна", filled: false },
+            { name: "Узакбаева Алия Кадировна", filled: false },
+            { name: "Бекмағанбетова Гүлмира Басқынбайқызы", filled: false },
+            { name: "Курбашева Зинаида Канджабаевна", filled: false },
+            { name: "Арманқызы Сәуле", filled: false },
+            { name: "Умирбаева Аққкенже Тобжанқызы", filled: false },
+            { name: "Рахимова Динара Жарқынбаевна", filled: false },
+            { name: "Мадиева Қарлығаш Мырзалықызы", filled: false },
+            { name: "Сейтханова Назипа Айтбаевна", filled: false },
+            { name: "Карибаева Айгуль Акылбаевна", filled: false },
+            { name: "Жуманиязова Жангил Канатбаевна", filled: false },
+            { name: "Нурпеисова Тамаша Миирхановна", filled: false },
+            { name: "Жиемуратова Камила Ибраймовна", filled: false },
+            { name: "Рғайбайқызы Мира", filled: false },
+            { name: "Булатова Анар Адженовна", filled: false },
+            { name: "Керимбаева Анаргүл Конакбаевна", filled: false },
+            { name: "Сейтканова Асия Айтбаевна", filled: false },
+            { name: "Нурмаханова Эльмира Нургалиевна", filled: false },
+            { name: "Оразиманова Нургул Серикболовна", filled: false },
+            { name: "Авилшарива Жадыра Қанатқызы", filled: false },
+            { name: "Кашкынбаева Айнур Куанышбаевна", filled: false },
+            { name: "Абишова Жаркынай Сайлаубаевна", filled: false },
+            { name: "Тайрова Жарқынай Ешмуханбетовна", filled: false },
+            { name: "Утебаева Жанар Арыстановна", filled: false },
+            { name: "Толыбаева Индира Парахатқызы", filled: false },
+            { name: "Казанцева Ольга Анатольевна", filled: false },
+            { name: "Мұқажан Айгерім Тоқтасыновна", filled: false },
+            { name: "Ерназарова Құралай Кутлимуратқызы", filled: false },
+            { name: "Татубаева Самал Бақытхановна", filled: false },
+            { name: "Смагулова Молдир", filled: false },
+            { name: "Жақсылыкова Жайна", filled: false },
+            { name: "Кансултанова Рита", filled: false },
+            { name: "Нагметуллаева Мехрибан", filled: false },
+            { name: "Балабаева Гульфат", filled: false },
+            { name: "Әміртай Айман", filled: false },
+            { name: "Фермахан Риза", filled: false },
+            { name: "Балтабек Балжан", filled: false },
+            { name: "Мерканова Алтынай", filled: false },
+            { name: "Қуанышева Нұржамал", filled: false },
+            { name: "Қалқаева Гүлім", filled: false },
+            { name: "Жарылқасынова Айсұлу", filled: false },
+            { name: "Боранбаева Назым", filled: false },
+            { name: "Маметова Сымбат", filled: false },
+            { name: "Биманова Мерей", filled: false },
+            { name: "Уралбаева Меруерт", filled: false },
+            { name: "Ерназарова Гулхадиша", filled: false },
+            { name: "Исатаева Қаламқас / Бижанова Загипа", filled: false },
+            { name: "Кудайбергенова Тазагүл", filled: false },
+            { name: "Тұрған Гүлнұр", filled: false },
+            { name: "Айтбай Ұлжан", filled: false },
+            { name: "Бигараева Майра", filled: false },
+            { name: "Амреева Гүлдана", filled: false },
+            { name: "Оралбекова Ақкөжек", filled: false },
+            { name: "Базарбаева Софья", filled: false },
+            { name: "Сүлейменова Анар", filled: false },
+            { name: "Даулет Айбота", filled: false },
+            { name: "Серік Айжан", filled: false },
+            { name: "Қамбарова Майра", filled: false },
+            { name: "Сарсенбаева Ботагөз", filled: false },
+            { name: "Темербаева Қорлығайым", filled: false },
+            { name: "Абденова Айгүл", filled: false },
+            { name: "Орынбаева Лутфия", filled: false },
+            { name: "Жеңіс Ұлжаныс", filled: false },
+            { name: "Хамитова Алтынгуль", filled: false },
+            { name: "Тұрысбекова Роза", filled: false },
+            { name: "Сагындыкова Гүлнар", filled: false },
+            { name: "Авезова Іңкәр", filled: false },
+            { name: "Азизова Курлиман", filled: false },
+            { name: "Қуаныш Бейбарыс", filled: false },
+            { name: "Ахметова Шынар", filled: false },
+            { name: "Серікбай Анар", filled: false },
+            { name: "Кудайбергенова Тазагуль", filled: false },
+            { name: "Аубакирова Толқын", filled: false },
+            { name: "Сатыбалдиева Айгерім", filled: false },
+            { name: "Бижанова Загипа", filled: false },
+            { name: "Уразбаева Айгерім", filled: false },
+            { name: "Байғабылова Гүлнұр", filled: false },
+            { name: "Нығметолла Гүлдана", filled: false },
+            { name: "Шалимбетова Айсұлу", filled: false },
+            { name: "Абжалелова Жадыра", filled: false },
+            { name: "Ибрагимова Мөлдір", filled: false },
+            { name: "Рабаева Айман", filled: false },
+            { name: "Көпбаева Сауле", filled: false },
+            { name: "Истаева Раушан", filled: false },
+            { name: "Нұртазаева Мақпал", filled: false },
+            { name: "Сиптанова Роза", filled: false },
+            { name: "Қырғызбекова Еңілік", filled: false },
+            { name: "Тохсанбай Ақерке", filled: false },
+            { name: "Калмурзаева Гулжайна", filled: false }
+        ];
+
+        let currentPeriod = 'weekly';
+
+        window.onload = function() {
+            const savedSchool = localStorage.getItem("smart_belgiley_school_name");
+            if (savedSchool) {
+                document.getElementById("schoolNameInput").value = savedSchool;
+            }
+
+            const savedTotal = localStorage.getItem("smart_belgiley_total_students");
+            if (savedTotal) {
+                document.getElementById("totalSchoolStudentsInput").value = savedTotal;
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("attendanceDate").value = today;
+
+            populateGradesAndLetters();
+            populateTeacherSelect();
+
+            const lastTeacher = localStorage.getItem("smart_belgiley_current_teacher");
+            if (lastTeacher) {
+                const select = document.getElementById("teacherNameSelect");
+                if (select) select.value = lastTeacher;
+            }
+
+            renderAttendanceTable();
+            updateAdminStats();
+            renderTeachersStatusWidget();
+            renderMonthlyAbsentTable();
+            renderPeriodReport();
+        };
+
+        function persistData() {
+            localStorage.setItem("smart_belgiley_students", JSON.stringify(students));
+            localStorage.setItem("smart_belgiley_history", JSON.stringify(attendanceHistory));
+            localStorage.setItem("smart_belgiley_teachers", JSON.stringify(schoolTeachers));
+        }
+
+        function saveSchoolName() {
+            const val = document.getElementById("schoolNameInput").value.trim();
+            localStorage.setItem("smart_belgiley_school_name", val);
+            showToast("Мектеп атауы сақталды!");
+        }
+
+        function saveTotalSchoolStudents() {
+            const val = document.getElementById("totalSchoolStudentsInput").value;
+            localStorage.setItem("smart_belgiley_total_students", val);
+            updateAdminStats();
+            showToast("Мектеп оқушыларының саны сақталды!");
+        }
+
+        function switchRole(role) {
+            const teacherBtn = document.getElementById("roleTeacherBtn");
+            const adminBtn = document.getElementById("roleAdminBtn");
+            const teacherView = document.getElementById("teacherView");
+            const adminView = document.getElementById("adminView");
+
+            if (role === 'teacher') {
+                teacherBtn.className = "px-3 py-1.5 rounded-lg bg-white text-indigo-700 shadow-sm transition font-medium text-sm";
+                adminBtn.className = "px-3 py-1.5 rounded-lg text-indigo-200 hover:text-white transition font-medium text-sm";
+                teacherView.classList.remove("hidden");
+                adminView.classList.add("hidden");
+            } else {
+                adminBtn.className = "px-3 py-1.5 rounded-lg bg-white text-indigo-700 shadow-sm transition font-medium text-sm";
+                teacherBtn.className = "px-3 py-1.5 rounded-lg text-indigo-200 hover:text-white transition font-medium text-sm";
+                adminView.classList.remove("hidden");
+                teacherView.classList.add("hidden");
+                updateAdminStats();
+                renderTeachersStatusWidget();
+                renderMonthlyAbsentTable();
+                renderPeriodReport();
+            }
+        }
+
+        function populateGradesAndLetters() {
+            const gradeSelects = ["teacherGradeSelect", "newStudentGrade", "importGrade"];
+            const letterSelects = ["teacherLetterSelect", "newStudentLetter", "importLetter"];
+            const letters = ["А", "Ә", "Б", "В", "Г", "Ғ", "Д", "Е", "Ё", "Ж", "З", "И", "Й", "К", "Қ"];
+
+            gradeSelects.forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                sel.innerHTML = "";
+                for (let i = 1; i <= 11; i++) {
+                    const opt = document.createElement("option");
+                    opt.value = i;
+                    opt.innerText = `${i}-сынып`;
+                    sel.appendChild(opt);
+                }
+            });
+
+            letterSelects.forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                sel.innerHTML = "";
+                letters.forEach(l => {
+                    const opt = document.createElement("option");
+                    opt.value = l;
+                    opt.innerText = l;
+                    sel.appendChild(opt);
+                });
+            });
+        }
+
+        function populateTeacherSelect() {
+            const select = document.getElementById("teacherNameSelect");
+            if (!select) return;
+            select.innerHTML = "";
+            schoolTeachers.forEach(t => {
+                const opt = document.createElement("option");
+                opt.value = t.name;
+                opt.innerText = t.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function onTeacherSelectChange() {
+            const val = document.getElementById("teacherNameSelect").value;
+            localStorage.setItem("smart_belgiley_current_teacher", val);
+            renderAttendanceTable();
+        }
+
+        function saveTeacherInfo() {
+            const val = document.getElementById("teacherNameSelect").value.trim();
+            localStorage.setItem("smart_belgiley_current_teacher", val);
+            if (val) {
+                const found = schoolTeachers.find(t => t.name === val);
+                if (found) found.filled = true;
+                persistData();
+            }
+            renderTeachersStatusWidget();
+            showToast("Пән иесі таңдауы сақталды!");
+        }
+
+        function openAddTeacherModal() {
+            document.getElementById("teacherModal").classList.remove("hidden");
+        }
+
+        function closeAddTeacherModal() {
+            document.getElementById("teacherModal").classList.add("hidden");
+            document.getElementById("newTeacherNameInput").value = "";
+        }
+
+        function addNewTeacher() {
+            const name = document.getElementById("newTeacherNameInput").value.trim();
+            if (!name) {
+                showToast("Аты-жөнін енгізіңіз!");
+                return;
+            }
+            if (!schoolTeachers.some(t => t.name === name)) {
+                schoolTeachers.push({ name: name, filled: false });
+                persistData();
+                populateTeacherSelect();
+                document.getElementById("teacherNameSelect").value = name;
+                localStorage.setItem("smart_belgiley_current_teacher", name);
+            }
+            closeAddTeacherModal();
+            renderTeachersStatusWidget();
+            showToast("Сәтті қосылды!");
+        }
+
+        function openDeleteTeacherModal() {
+            const select = document.getElementById("teacherDeleteSelect");
+            if (!select) return;
+            select.innerHTML = "";
+            schoolTeachers.forEach(t => {
+                const opt = document.createElement("option");
+                opt.value = t.name;
+                opt.innerText = t.name;
+                select.appendChild(opt);
+            });
+            document.getElementById("deleteTeacherModal").classList.remove("hidden");
+        }
+
+        function closeDeleteTeacherModal() {
+            document.getElementById("deleteTeacherModal").classList.add("hidden");
+        }
+
+        function confirmDeleteTeacher() {
+            const targetName = document.getElementById("teacherDeleteSelect").value;
+            if (!targetName) return;
+
+            schoolTeachers = schoolTeachers.filter(t => t.name !== targetName);
+            persistData();
+            populateTeacherSelect();
+            closeDeleteTeacherModal();
+            renderTeachersStatusWidget();
+            showToast("Тізімнен сәтті өшірілді!");
+        }
+
+        function openAddStudentModal() {
+            document.getElementById("studentModal").classList.remove("hidden");
+        }
+
+        function closeAddStudentModal() {
+            document.getElementById("studentModal").classList.add("hidden");
+            document.getElementById("newStudentName").value = "";
+        }
+
+        function addNewStudent() {
+            const name = document.getElementById("newStudentName").value.trim();
+            const grade = document.getElementById("newStudentGrade").value;
+            const letter = document.getElementById("newStudentLetter").value;
+
+            if (!name) {
+                showToast("Оқушының аты-жөнін енгізіңіз!");
+                return;
+            }
+
+            students.push({
+                id: 's_' + Date.now() + Math.random().toString(36).substr(2, 5),
+                name: name,
+                grade: grade,
+                letter: letter
+            });
+
+            persistData();
+            closeAddStudentModal();
+            renderAttendanceTable();
+            showToast("Оқушы тізімге қосылды және мәңгі сақталды!");
+        }
+
+        function openImportModal() {
+            document.getElementById("importModal").classList.remove("hidden");
+        }
+
+        function closeImportModal() {
+            document.getElementById("importModal").classList.add("hidden");
+            document.getElementById("importText").value = "";
+            document.getElementById("selectedFileName").innerText = "Word файлын таңдаңыз немесе осында сүйреңіз";
+            document.getElementById("wordFileInput").value = "";
+        }
+
+        function handleWordFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            document.getElementById("selectedFileName").innerText = file.name;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+                    .then(function(result) {
+                        document.getElementById("importText").value = result.value;
+                        showToast("Word файлы сәтті оқылды!");
+                    })
+                    .catch(function(err) {
+                        showToast("Word файлын оқу қатесі!");
+                        console.error(err);
+                    });
+            };
+            reader.readAsArrayBuffer(arrayBuffer);
+        }
+
+        function processWordImport() {
+            const text = document.getElementById("importText").value.trim();
+            const grade = document.getElementById("importGrade").value;
+            const letter = document.getElementById("importLetter").value;
+
+            if (!text) {
+                showToast("Жүктелетін мәтін немесе файл бос!");
+                return;
+            }
+
+            const lines = text.split("\n");
+            let count = 0;
+            lines.forEach(line => {
+                let clean = line.replace(/^\d+[\.\)]\s*/, '').trim();
+                if (clean.length > 2) {
+                    if (!students.some(s => s.name.toLowerCase() === clean.toLowerCase() && s.grade === grade && s.letter === letter)) {
+                        students.push({
+                            id: 's_' + Date.now() + Math.random().toString(36).substr(2, 5),
+                            name: clean,
+                            grade: grade,
+                            letter: letter
+                        });
+                        count++;
+                    }
+                }
+            });
+
+            persistData();
+            closeImportModal();
+            renderAttendanceTable();
+            showToast(`${count} оқушы тізімге сәтті қосылды!`);
+        }
+
+        function renderAttendanceTable() {
+            const grade = document.getElementById("teacherGradeSelect").value;
+            const letter = document.getElementById("teacherLetterSelect").value;
+            const date = document.getElementById("attendanceDate").value;
+            const tbody = document.getElementById("attendanceTableBody");
+            if (!tbody) return;
+
+            tbody.innerHTML = "";
+
+            const filtered = students.filter(s => s.grade === grade && s.letter === letter);
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">Бұл сыныпта оқушылар әлі жоқ. «Оқушы қосу» немесе «Word-тан жүктеу» арқылы қосыңыз.</td></tr>`;
+                updateStats(0, 0, 0);
+                return;
+            }
+
+            let pCount = 0, eCount = 0, aCount = 0;
+            const dayKey = `${date}_${grade}_${letter}`;
+            const dayRecords = attendanceHistory[dayKey] || {};
+
+            filtered.forEach((st, idx) => {
+                const status = dayRecords[st.id] || 'present';
+                if (status === 'present') pCount++;
+                else if (status === 'excused') eCount++;
+                else if (status === 'absent') aCount++;
+
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-slate-50/80 transition";
+                tr.innerHTML = `
+                    <td class="p-4 font-semibold text-slate-500">${idx + 1}</td>
+                    <td class="p-4 font-medium text-slate-800">${st.name}</td>
+                    <td class="p-4 text-center">
+                        <input type="radio" name="att_${st.id}" value="present" ${status === 'present' ? 'checked' : ''} onchange="updateAttendanceStatus('${st.id}', 'present')" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                    </td>
+                    <td class="p-4 text-center">
+                        <input type="radio" name="att_${st.id}" value="excused" ${status === 'excused' ? 'checked' : ''} onchange="updateAttendanceStatus('${st.id}', 'excused')" class="w-4 h-4 text-amber-600 focus:ring-amber-500 cursor-pointer">
+                    </td>
+                    <td class="p-4 text-center">
+                        <input type="radio" name="att_${st.id}" value="absent" ${status === 'absent' ? 'checked' : ''} onchange="updateAttendanceStatus('${st.id}', 'absent')" class="w-4 h-4 text-rose-600 focus:ring-rose-500 cursor-pointer">
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updateStats(pCount, eCount, aCount);
+        }
+
+        function updateAttendanceStatus(studentId, status) {
+            const grade = document.getElementById("teacherGradeSelect").value;
+            const letter = document.getElementById("teacherLetterSelect").value;
+            const date = document.getElementById("attendanceDate").value;
+            const dayKey = `${date}_${grade}_${letter}`;
+
+            if (!attendanceHistory[dayKey]) {
+                attendanceHistory[dayKey] = {};
+            }
+            attendanceHistory[dayKey][studentId] = status;
+
+            persistData();
+
+            let p = 0, e = 0, a = 0;
+            const filtered = students.filter(s => s.grade === grade && s.letter === letter);
+            filtered.forEach(st => {
+                const stVal = attendanceHistory[dayKey][st.id] || 'present';
+                if (stVal === 'present') p++;
+                else if (stVal === 'excused') e++;
+                else if (stVal === 'absent') a++;
+            });
+
+            updateStats(p, e, a);
+        }
+
+        function updateStats(p, e, a) {
+            document.getElementById("statPresent").innerText = p;
+            document.getElementById("statExcused").innerText = e;
+            document.getElementById("statAbsent").innerText = a;
+        }
+
+        function saveAttendance() {
+            const teacherName = document.getElementById("teacherNameSelect").value.trim();
+            if (teacherName) {
+                const found = schoolTeachers.find(t => t.name === teacherName);
+                if (found) found.filled = true;
+            }
+            persistData();
+            renderMonthlyAbsentTable();
+            renderTeachersStatusWidget();
+            updateAdminStats();
+            showToast("Сабаққа қатысу деректері тұрақты сақталды!");
+        }
+
+        function renderTeachersStatusWidget() {
+            const filledGrid = document.getElementById("filledTeachersGrid");
+            const filledCountTag = document.getElementById("filledCountTag");
+            const filledBar = document.getElementById("teacherProgressFilled");
+            const unfilledBar = document.getElementById("teacherProgressUnfilled");
+
+            if (!filledGrid) return;
+            filledGrid.innerHTML = "";
+
+            const filledList = schoolTeachers.filter(t => t.filled);
+            const unfilledList = schoolTeachers.filter(t => !t.filled);
+
+            filledCountTag.innerText = filledList.length;
+
+            const total = schoolTeachers.length || 1;
+            const filledPct = (filledList.length / total) * 100;
+            const unfilledPct = 100 - filledPct;
+
+            filledBar.style.width = `${filledPct}%`;
+            unfilledBar.style.width = `${unfilledPct}%`;
+
+            if (filledList.length === 0) {
+                filledGrid.innerHTML = `<p class="text-xs text-slate-400 p-2">Әзірге журнал толтырғандар жоқ.</p>`;
+            } else {
+                filledList.forEach(t => {
+                    const div = document.createElement("div");
+                    div.className = "flex items-center justify-between bg-white p-2.5 rounded-xl border border-emerald-100 shadow-sm text-xs font-semibold text-slate-700";
+                    div.innerHTML = `<span>${t.name}</span><span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">Толтырды</span>`;
+                    filledGrid.appendChild(div);
+                });
+            }
+        }
+
+        function updateAdminStats() {
+            let totalPresentToday = 0;
+            let totalAbsentToday = 0;
+
+            Object.keys(attendanceHistory).forEach(key => {
+                const dayRecs = attendanceHistory[key];
+                Object.values(dayRecs).forEach(status => {
+                    if (status === 'present') totalPresentToday++;
+                    else totalAbsentToday++;
+                });
+            });
+
+            document.getElementById("adminTotalPresentToday").innerText = totalPresentToday;
+            document.getElementById("adminTotalAbsentToday").innerText = totalAbsentToday;
+
+            const sumChecked = totalPresentToday + totalAbsentToday;
+            if (sumChecked > 0) {
+                let rate = Math.round((totalPresentToday / sumChecked) * 100);
+                document.getElementById("adminOverallRate").innerText = `${rate}%`;
+            } else {
+                document.getElementById("adminOverallRate").innerText = "—";
+            }
+        }
+
+        function switchPeriod(period) {
+            currentPeriod = period;
+            document.getElementById("periodWeeklyBtn").className = period === 'weekly' ? "px-3 py-1.5 rounded-lg bg-white text-slate-800 font-semibold text-xs shadow-sm transition" : "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-800 font-semibold text-xs transition";
+            document.getElementById("periodMonthlyBtn").className = period === 'monthly' ? "px-3 py-1.5 rounded-lg bg-white text-slate-800 font-semibold text-xs shadow-sm transition" : "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-800 font-semibold text-xs transition";
+            document.getElementById("periodYearlyBtn").className = period === 'yearly' ? "px-3 py-1.5 rounded-lg bg-white text-slate-800 font-semibold text-xs shadow-sm transition" : "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-800 font-semibold text-xs transition";
+            renderPeriodReport();
+        }
+
+        function formatDateDDMMYYYY(dateStr) {
+            if (!dateStr) return "";
+            const parts = dateStr.split("-");
+            if (parts.length === 3) {
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        function renderPeriodReport() {
+            const summaryDiv = document.getElementById("periodSummary");
+            const tbody = document.getElementById("periodTableBody");
+            if (!summaryDiv || !tbody) return;
+
+            let totalMissedCount = 0;
+            Object.keys(attendanceHistory).forEach(key => {
+                const dayRecs = attendanceHistory[key];
+                Object.values(dayRecs).forEach(status => {
+                    if (status === 'absent' || status === 'excused') {
+                        totalMissedCount++;
+                    }
+                });
+            });
+
+            summaryDiv.innerHTML = `
+                <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
+                    <p class="text-xs text-indigo-600 font-semibold">Көрсеткіш мерзімі</p>
+                    <h4 class="text-lg font-bold text-indigo-900 mt-1">${currentPeriod === 'weekly' ? 'Апталық есеп' : currentPeriod === 'monthly' ? 'Айлық есеп' : 'Жылдық есеп'}</h4>
+                </div>
+                <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
+                    <p class="text-xs text-emerald-600 font-semibold">Оқушылар тізімі</p>
+                    <h4 class="text-lg font-bold text-emerald-900 mt-1">${students.length > 0 ? students.length + ' оқушы' : 'Әзірге жоқ'}</h4>
+                </div>
+                <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-100">
+                    <p class="text-xs text-amber-600 font-semibold">Жалпы қалған сабақтар</p>
+                    <h4 class="text-lg font-bold text-amber-900 mt-1">${totalMissedCount > 0 ? totalMissedCount + ' рет' : '—'}</h4>
+                </div>
+            `;
+
+            let dynamicRowsHTML = "";
+            let recordCount = 0;
+
+            const teacherName = localStorage.getItem("smart_belgiley_current_teacher") || "Айтикеева Раушан Алимбаевна";
+
+            Object.keys(attendanceHistory).forEach(key => {
+                const parts = key.split("_");
+                if (parts.length >= 3) {
+                    const rawDate = parts[0];
+                    const grade = parts[1];
+                    const letter = parts[2];
+                    const formattedDate = formatDateDDMMYYYY(rawDate);
+
+                    const dayRecs = attendanceHistory[key];
+                    Object.keys(dayRecs).forEach(stId => {
+                        const status = dayRecs[stId];
+                        if (status === 'absent' || status === 'excused') {
+                            const stObj = students.find(s => s.id === stId);
+                            const stName = stObj ? stObj.name : "Оқушы";
+                            const statusText = status === 'absent' ? 'Себепсіз' : 'Себепті';
+
+                            recordCount++;
+                            dynamicRowsHTML += `
+                                <tr>
+                                    <td class="p-3.5">${stName}</td>
+                                    <td class="p-3.5">${grade}-сынып ${letter}</td>
+                                    <td class="p-3.5">${teacherName}</td>
+                                    <td class="p-3.5 text-slate-600 font-normal">${formattedDate} (${statusText})</td>
+                                    <td class="p-3.5 text-center text-amber-600">1 рет</td>
+                                </tr>
+                            `;
+                        }
+                    });
+                }
+            });
+
+            if (recordCount === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Әзірге қалдырылған сабақтар тіркелмеген.</td></tr>`;
+            } else {
+                tbody.innerHTML = dynamicRowsHTML;
+            }
+        }
+
+        function renderMonthlyAbsentTable() {
+            const tbody = document.getElementById("monthlyAbsentTableBody");
+            if (!tbody) return;
+
+            let dynamicRowsHTML = "";
+            let recordCount = 0;
+            const teacherName = localStorage.getItem("smart_belgiley_current_teacher") || "Уримбаева Асем Каримовна";
+
+            Object.keys(attendanceHistory).forEach(key => {
+                const parts = key.split("_");
+                if (parts.length >= 3) {
+                    const rawDate = parts[0];
+                    const grade = parts[1];
+                    const letter = parts[2];
+                    const formattedDate = formatDateDDMMYYYY(rawDate);
+
+                    const dayRecs = attendanceHistory[key];
+                    Object.keys(dayRecs).forEach(stId => {
+                        const status = dayRecs[stId];
+                        if (status === 'absent') {
+                            const stObj = students.find(s => s.id === stId);
+                            const stName = stObj ? stObj.name : "Оқушы";
+
+                            recordCount++;
+                            dynamicRowsHTML += `
+                                <tr>
+                                    <td class="p-3.5">${stName}</td>
+                                    <td class="p-3.5">${grade}-сынып ${letter}</td>
+                                    <td class="p-3.5">${teacherName}</td>
+                                    <td class="p-3.5 text-slate-600 font-normal">${formattedDate} (Себепсіз)</td>
+                                    <td class="p-3.5 text-center text-rose-600">1 рет</td>
+                                </tr>
+                            `;
+                        }
+                    });
+                }
+            });
+
+            if (recordCount === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Бүгінге немесе өткен күндерге себепсіз келмеген оқушылар тіркелмеді.</td></tr>`;
+            } else {
+                tbody.innerHTML = dynamicRowsHTML;
+            }
+        }
+
+        function exportReport(type) {
+            showToast(`Есеп ${type.toUpperCase()} форматында жүктелуде...`);
+        }
+
+        function exportPeriodReport(type) {
+            showToast(`Мерзімдік есеп ${type.toUpperCase()} форматында жүктелуде...`);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById("toast");
+            const msgSpan = document.getElementById("toastMessage");
+            msgSpan.innerText = msg;
+            toast.classList.remove("translate-y-20", "opacity-0");
+            setTimeout(() => {
+                toast.classList.add("translate-y-20", "opacity-0");
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
